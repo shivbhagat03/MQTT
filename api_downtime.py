@@ -2,13 +2,13 @@ from flask import Flask, jsonify, request
 from datetime import datetime
 from config import INFLUXDB_TOKEN, INFLUX_URL, INFLUX_ORG, INFLUX_BUCKET
 import traceback
-from downtime import DowntimeCalculator  
+from downtime import DowntimeCalculator
 
 app = Flask(__name__)
-calculator = DowntimeCalculator()  
+calculator = DowntimeCalculator()
 
 @app.route("/api/downtime", methods=["GET"])
-def get_downtime():
+def get_production_status():
     try:
         machineId = request.args.get('machineId', '').strip()
         start_time = request.args.get('start', '').strip()
@@ -26,7 +26,10 @@ def get_downtime():
         except ValueError as e:
             return jsonify({"error": f"Invalid datetime format: {str(e)}"}), 400
 
-        result = calculator.calculate_downtime_slots(influx_start, influx_stop, machineId)
+        result = calculator.calculate_downtime_and_connection_lost(influx_start, influx_stop, machineId)
+
+        if "error" in result:
+            return jsonify({"error": result["error"]}), 500
 
         response = {
             "machineId": machineId,
@@ -34,12 +37,19 @@ def get_downtime():
                 "start": start_time,
                 "stop": stop_time
             },
-            "downtimePeriods": result.get("downtime_periods", []),
-            "totalduration": result.get("total_duration", 0),
-            "totalcount": result.get("downtime_count", 0)
+            "downtime": {
+                "periods": result.get("downtime_periods", []),
+                "totalDuration": result.get("total_downtime_duration", 0),
+                "count": result.get("downtime_count", 0)
+            },
+            "connectionLost": {
+                "periods": result.get("connection_lost_periods", []),
+                "totalDuration": result.get("total_connection_lost_duration", 0),
+                "count": result.get("connection_lost_count", 0)
+            }
         }
 
-        return jsonify(response), 200 if not result.get("error") else 500
+        return jsonify(response), 200
 
     except Exception as e:
         print(f"Error in API: {str(e)}")
