@@ -8,7 +8,7 @@ app = Flask(__name__)
 calculator = DowntimeCalculator()
 
 @app.route("/api/downtime", methods=["GET"])
-def get_production_status():
+def get_downtime():
     try:
         machineId = request.args.get('machineId', '').strip()
         start_time = request.args.get('start', '').strip()
@@ -16,17 +16,14 @@ def get_production_status():
 
         if not all([machineId, start_time, stop_time]):
             return jsonify({"error": "Missing required parameters"}), 400
-        
-        try:
-            start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
-            stop_dt = datetime.fromisoformat(stop_time.replace('Z', '+00:00'))
 
-            influx_start = start_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-            influx_stop = stop_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        try:
+            datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+            datetime.fromisoformat(stop_time.replace('Z', '+00:00'))
         except ValueError as e:
             return jsonify({"error": f"Invalid datetime format: {str(e)}"}), 400
 
-        result = calculator.calculate_downtime_and_connection_lost(influx_start, influx_stop, machineId)
+        result = calculator.calculate_downtime_and_connection_lost(start_time, stop_time, machineId)
 
         if "error" in result:
             return jsonify({"error": result["error"]}), 500
