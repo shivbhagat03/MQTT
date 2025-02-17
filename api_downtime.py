@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from datetime import datetime
 from config import INFLUXDB_TOKEN, INFLUX_URL, INFLUX_ORG, INFLUX_BUCKET
 import traceback
-from downtime import DowntimeCalculator
+from connectionloss_downtime import DowntimeCalculator
 
 app = Flask(__name__)
 calculator = DowntimeCalculator()
