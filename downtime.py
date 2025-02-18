@@ -48,7 +48,7 @@ class DowntimeCalculator:
                 df['diff'] = df['timestamp'].diff().dt.total_seconds()
 
                 start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
-                if (df['timestamp'].iloc[0] - start_dt).total_seconds() > 300:
+                if (df['timestamp'].iloc[0] - start_dt).total_seconds() > 120:
                     duration = (df['timestamp'].iloc[0] - start_dt).total_seconds()
                     connection_lost_periods.append({
                         "start_time": start_dt.isoformat().replace('+00:00', 'Z'),
@@ -59,7 +59,7 @@ class DowntimeCalculator:
 
                 for i in range(len(df) - 1):
                     gap = df['diff'].iloc[i + 1]
-                    if gap > 300:
+                    if gap > 120:
                         connection_lost_periods.append({
                             "start_time": df['timestamp'].iloc[i].isoformat().replace('+00:00', 'Z'),
                             "end_time": df['timestamp'].iloc[i + 1].isoformat().replace('+00:00', 'Z'),
@@ -68,7 +68,7 @@ class DowntimeCalculator:
                         connection_lost_duration += gap
 
                 end_dt = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
-                if (end_dt - df['timestamp'].iloc[-1]).total_seconds() > 300:
+                if (end_dt - df['timestamp'].iloc[-1]).total_seconds() > 120:
                     duration = (end_dt - df['timestamp'].iloc[-1]).total_seconds()
                     connection_lost_periods.append({
                         "start_time": df['timestamp'].iloc[-1].isoformat().replace('+00:00', 'Z'),
