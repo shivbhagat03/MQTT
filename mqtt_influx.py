@@ -11,8 +11,7 @@ influx_handler = InfluxHandler(
     bucket=INFLUX_BUCKET
 )
 
-def on_connect(client, userdata, flags, rc):
-    
+def on_connect(client, userdata, flags, rc, properties=None):
     print(f"Connected to MQTT broker with result code {rc}")
     client.subscribe(MQTT_TOPIC)
 
@@ -20,8 +19,6 @@ def on_message(client, userdata, msg):
     try:
         
         payload = json.loads(msg.payload.decode()) 
-        
-        
         machineId = payload.get('machineId')
         stroke_count = payload.get('totalStrokeCounter')
         timestamp = payload.get('time')
@@ -45,7 +42,7 @@ def on_message(client, userdata, msg):
 def main():
     try:
         
-        client = mqtt.Client()
+        client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
         client.on_connect = on_connect
         client.on_message = on_message
 
